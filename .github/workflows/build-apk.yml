@@ -26,10 +26,15 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Fix Icon Dimensions
+        run: |
+          sudo apt-get update && sudo apt-get install -y imagemagick
+          mogrify -resize 1024x1024! src/assets/icon.png
+
       - name: Build APK Locally on GitHub Runner
         run: |
           export NODE_OPTIONS="--max-old-space-size=4096"
-          eas build --platform android --profile production --local --non-interactive --no-verify
+          eas build --platform android --profile production --local --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_BUILD_NO_EXPO_GO_WARNING: "true"
