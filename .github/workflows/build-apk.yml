@@ -12,7 +12,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20  # Downgraded to 20 for better stability
+          node-version: 20
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -31,17 +31,20 @@ jobs:
           sudo apt-get update && sudo apt-get install -y imagemagick
           mogrify -resize 1024x1024! src/assets/icon.png
 
-      - name: Build APK Locally on GitHub Runner
+      - name: Prebuild Android
+        run: npx expo prebuild --platform android --no-interactive
+
+      - name: Build APK via Gradle
         run: |
-          export NODE_OPTIONS="--max-old-space-size=4096"
-          eas build --platform android --profile production --local --non-interactive
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
         env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          EAS_BUILD_NO_EXPO_GO_WARNING: "true"
-          EXPO_NO_TELEMETRY: "1"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: worknest-apk
-          path: "*.apk"
+          path: android/app/build/outputs/apk/release/*.apk
