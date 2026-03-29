@@ -1,4 +1,5 @@
 import React from 'react';
+import '../../global.css';
 import { View } from 'react-native';
 import { Redirect, Stack, useSegments } from 'expo-router';
 import LottieView from 'lottie-react-native';
