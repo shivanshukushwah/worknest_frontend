@@ -32,7 +32,7 @@ jobs:
           mogrify -resize 1024x1024! src/assets/icon.png
 
       - name: Prebuild Android
-        run: npx expo prebuild --platform android --no-interactive
+        run: npx expo prebuild --platform android --non-interactive
 
       - name: Build APK via Gradle
         run: |
