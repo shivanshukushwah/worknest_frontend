@@ -12,7 +12,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20  # Downgraded to 20 for better stability
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -38,6 +38,7 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_BUILD_NO_EXPO_GO_WARNING: "true"
+          EXPO_NO_TELEMETRY: "1"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
