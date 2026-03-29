@@ -50,9 +50,6 @@
         "projectId": "7f78949d-7c6d-470f-b3cb-ff5f1f8aabdf"
       }
     },
-    "cli": {
-      "appVersionSource": "remote"
-    },
     "runtimeVersion": {
       "policy": "appVersion"
     }

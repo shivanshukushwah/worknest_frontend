@@ -27,9 +27,12 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build APK Locally on GitHub Runner
-        run: eas build --platform android --profile production --local --non-interactive
+        run: |
+          export NODE_OPTIONS="--max-old-space-size=4096"
+          eas build --platform android --profile production --local --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_BUILD_NO_EXPO_GO_WARNING: "true"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
