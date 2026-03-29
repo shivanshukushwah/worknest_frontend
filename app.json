@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "Worknest",
+    "slug": "worknest",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.worknest.app"
+    },
+    "android": {
+      "package": "com.worknest.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "splash": {
+        "image": "./src/assets/worknest_logo.png"
+      }
+    },
+    "web": {},
+    "plugins": [
+      "expo-secure-store",
+      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ]
+    ],
+    "scheme": "worknest",
+    "extra": {
+      "eas": {
+        "projectId": "7f78949d-7c6d-470f-b3cb-ff5f1f8aabdf"
+      }
+    },
+    "cli": {
+      "appVersionSource": "remote"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
+}

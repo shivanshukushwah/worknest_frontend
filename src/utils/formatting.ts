@@ -1,0 +1,52 @@
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
+
+/**
+ * Date and time utilities
+ */
+
+export const formatDate = (date: string | Date): string => {
+  return dayjs(date).format('DD MMM YYYY');
+};
+
+export const formatDateTime = (date: string | Date): string => {
+  return dayjs(date).format('DD MMM YYYY, hh:mm A');
+};
+
+export const formatTimeAgo = (date: string | Date): string => {
+  return dayjs(date).fromNow();
+};
+
+export const formatTime = (date: string | Date): string => {
+  return dayjs(date).format('hh:mm A');
+};
+
+export const isExpired = (date: string | Date): boolean => {
+  return dayjs(date).isBefore(dayjs());
+};
+
+export const getDaysRemaining = (date: string | Date): number => {
+  return dayjs(date).diff(dayjs(), 'day');
+};
+
+export const formatSalary = (salary: number, type: 'fixed' | 'hourly' | 'range'): string => {
+  if (type === 'hourly') {
+    return `₹${salary}/hour`;
+  } else if (type === 'range') {
+    return `₹${salary}+`;
+  }
+  return `₹${salary}`;
+};
+
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+  }).format(amount);
+};
+
+export const formatNumber = (num: number): string => {
+  return new Intl.NumberFormat('en-IN').format(num);
+};
