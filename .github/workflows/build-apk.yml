@@ -29,7 +29,7 @@ jobs:
       - name: Build APK Locally on GitHub Runner
         run: |
           export NODE_OPTIONS="--max-old-space-size=4096"
-          eas build --platform android --profile production --local --non-interactive
+          eas build --platform android --profile production --local --non-interactive --no-verify
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EAS_BUILD_NO_EXPO_GO_WARNING: "true"
