@@ -1,6 +1,6 @@
 name: Build Android APK
 on:
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,13 +14,25 @@ jobs:
         with:
           node-version: 22
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
       - name: Setup EAS CLI
         run: npm install -g eas-cli
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Build APK on EAS
-        run: eas build --platform android --profile production --non-interactive
+      - name: Build APK Locally on GitHub Runner
+        run: eas build --platform android --profile production --local --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: worknest-apk
+          path: "*.apk"
