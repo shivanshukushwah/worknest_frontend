@@ -13,6 +13,9 @@ import { Screen, Card, Button, Badge } from '@components/index';
 import { jobAPI } from '@api/index';
 import { Job, JobType, ApplicationStatus } from '@mytypes/index';
 import { formatSalary, formatDate, isExpired } from '@utils/formatting';
+import { Colors, Shadows } from '@utils/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function JobDetailsScreen() {
   const router = useRouter();
@@ -37,6 +40,12 @@ export default function JobDetailsScreen() {
         if (response.data.applicationStatus) {
           setApplicationStatus(response.data.applicationStatus);
         }
+      } else {
+        const fallbackId = (response.data as any)?._id;
+        if (fallbackId) {
+          const retryRes = await jobAPI.getJobById(fallbackId);
+          if (retryRes.success && retryRes.data) setJob(retryRes.data);
+        }
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to load job details');
@@ -51,22 +60,17 @@ export default function JobDetailsScreen() {
 
     router.push({
       pathname: '/(student)/apply-job',
-      params: { jobId: job.id },
+      params: { jobId: job.id || (job as any)._id },
     });
   };
 
   const getStatusColor = (status?: ApplicationStatus): 'primary' | 'success' | 'warning' | 'danger' => {
     switch (status) {
-      case ApplicationStatus.APPLIED:
-        return 'primary';
-      case ApplicationStatus.SHORTLISTED:
-        return 'success';
-      case ApplicationStatus.HIRED:
-        return 'success';
-      case ApplicationStatus.REJECTED:
-        return 'danger';
-      default:
-        return 'primary';
+      case ApplicationStatus.APPLIED: return 'primary';
+      case ApplicationStatus.SHORTLISTED: return 'success';
+      case ApplicationStatus.HIRED: return 'success';
+      case ApplicationStatus.REJECTED: return 'danger';
+      default: return 'primary';
     }
   };
 
@@ -74,7 +78,7 @@ export default function JobDetailsScreen() {
     return (
       <Screen scrollable={false}>
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       </Screen>
     );
@@ -83,7 +87,9 @@ export default function JobDetailsScreen() {
   if (!job) {
     return (
       <Screen>
-        <Text style={styles.errorText}>Job not found</Text>
+        <View style={styles.loaderContainer}>
+          <Text style={styles.errorText}>Job not found</Text>
+        </View>
       </Screen>
     );
   }
@@ -92,121 +98,97 @@ export default function JobDetailsScreen() {
   const hasApplied = !!applicationStatus;
 
   return (
-    <Screen>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <Card>
-          <View style={styles.header}>
-            <View style={styles.titleSection}>
-              <Text style={styles.title}>{job.title}</Text>
-              {applicationStatus && (
-                <Badge label={applicationStatus} color={getStatusColor(applicationStatus)} />
-              )}
-            </View>
-            <View style={styles.companyRow}>
-              <Text style={styles.company}>{job.employer.name}</Text>
-              <TouchableOpacity
-                onPress={() => router.push({ pathname: '/reviews', params: { userId: job.employer.id } })}
-              >
-                <Text style={styles.viewReviewsText}>View Reviews</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <View style={styles.row}>
-              <Text style={styles.label}>Salary</Text>
-              <Text style={styles.value}>{formatSalary(job.salary, job.salaryType)}</Text>
-            </View>
-
-            <View style={styles.row}>
-              <Text style={styles.label}>Positions</Text>
-              <Text style={styles.value}>{job.positionsRequired}</Text>
-            </View>
-
-            <View style={styles.row}>
-              <Text style={styles.label}>Duration</Text>
-              <Text style={styles.value}>{job.duration} hours</Text>
-            </View>
-
-            <View style={styles.row}>
-              <Text style={styles.label}>Job Type</Text>
-              <Badge
-                label={job.type === JobType.ONLINE ? 'Online' : 'Offline'}
-                color="primary"
-              />
-            </View>
-
-            <View style={styles.row}>
-              <Text style={styles.label}>Deadline</Text>
-              <Text style={[styles.value, isJobExpired && styles.expired]}>
-                {formatDate(job.deadline)}
-                {isJobExpired && ' (Expired)'}
-              </Text>
-            </View>
-
-            {job.location && (
-              <View style={styles.row}>
-                <Text style={styles.label}>Location</Text>
-                <Text style={styles.value}>{job.location}</Text>
-              </View>
+    <Screen scrollable={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <LinearGradient
+          colors={[Colors.primaryDark, Colors.secondaryDark]}
+          style={styles.headerGradient}
+        >
+          <View style={styles.topRow}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color={Colors.white} />
+            </TouchableOpacity>
+            {applicationStatus && (
+              <Badge label={applicationStatus.toUpperCase()} color={getStatusColor(applicationStatus)} />
             )}
           </View>
-        </Card>
+          
+          <Text style={styles.title}>{job.title}</Text>
+          
+          <View style={styles.companyInfo}>
+            <Ionicons name="business" size={16} color="rgba(255,255,255,0.7)" />
+            <Text style={styles.companyName}>{job.employer.name}</Text>
+            <TouchableOpacity
+              onPress={() => router.push({ pathname: '/reviews', params: { userId: job.employer.id || (job.employer as any)._id } })}
+              style={styles.reviewBadge}
+            >
+              <Text style={styles.reviewText}>Reviews</Text>
+            </TouchableOpacity>
+          </View>
 
-        <Card>
-          <Text style={styles.sectionTitle}>Description</Text>
-          <Text style={styles.description}>{job.description}</Text>
-        </Card>
-
-        {job.skills && job.skills.length > 0 && (
-          <Card>
-            <Text style={styles.sectionTitle}>Required Skills</Text>
-            <View style={styles.skillsList}>
-              {job.skills.map((skill, index) => (
-                <Badge key={index} label={skill} color="primary" />
-              ))}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Salary</Text>
+              <Text style={styles.statValue}>{formatSalary(job.salary, job.salaryType)}</Text>
             </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Duration</Text>
+              <Text style={styles.statValue}>{job.duration} hrs</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Type</Text>
+              <Text style={styles.statValue}>{job.type === JobType.ONLINE ? 'Online' : 'Offline'}</Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+        <View style={styles.contentPadding}>
+          <Card style={styles.detailsCard}>
+            <Text style={styles.sectionTitle}>Job Overview</Text>
+            <View style={styles.infoRow}>
+              <Ionicons name="calendar-outline" size={18} color={Colors.primary} />
+              <Text style={styles.infoLabel}>Deadline:</Text>
+              <Text style={[styles.infoValue, isJobExpired && styles.expired]}>
+                {formatDate(job.deadline)} {isJobExpired && '(Expired)'}
+              </Text>
+            </View>
+            {job.location && (
+              <View style={styles.infoRow}>
+                <Ionicons name="location-outline" size={18} color={Colors.primary} />
+                <Text style={styles.infoLabel}>Location:</Text>
+                <Text style={styles.infoValue}>{job.location}</Text>
+              </View>
+            )}
           </Card>
-        )}
 
-        {job.type === JobType.ONLINE && (
-          <Card>
-            <Text style={styles.sectionTitle}>How to Apply</Text>
-            <Text style={styles.infoText}>
-              This is an online job. You'll need to provide your LinkedIn, GitHub, or Portfolio URL during application.
-            </Text>
-            <Text style={styles.infoText}>
-              Your profile will be automatically evaluated by our system. Top applicants will be shortlisted for further consideration.
-            </Text>
+          <Card style={styles.descriptionCard}>
+            <Text style={styles.sectionTitle}>Description</Text>
+            <Text style={styles.descriptionText}>{job.description}</Text>
           </Card>
-        )}
 
-        {!isJobExpired && !hasApplied && (
-          <Button
-            title="Apply Now"
-            onPress={handleApply}
-            fullWidth
-            size="large"
-            style={styles.applyButton}
-          />
-        )}
-
-        {hasApplied && (
-          <Card style={styles.appliedCard}>
-            <Text style={styles.appliedText}>
-              ✓ You have already applied for this job
-            </Text>
-          </Card>
-        )}
-
-        {isJobExpired && (
-          <Card style={styles.expiredCard}>
-            <Text style={styles.expiredText}>
-              This job posting has expired
-            </Text>
-          </Card>
-        )}
-
+          {hasApplied ? (
+            <View style={[styles.statusBanner, { backgroundColor: Colors.success + '15', borderColor: Colors.success }]}>
+              <Ionicons name="checkmark-circle" size={24} color={Colors.success} />
+              <Text style={[styles.statusText, { color: Colors.success }]}>You have already applied!</Text>
+            </View>
+          ) : isJobExpired ? (
+            <View style={[styles.statusBanner, { backgroundColor: Colors.danger + '15', borderColor: Colors.danger }]}>
+              <Ionicons name="time-outline" size={24} color={Colors.danger} />
+              <Text style={[styles.statusText, { color: Colors.danger }]}>This job has expired.</Text>
+            </View>
+          ) : (
+            <Button
+              title="Apply for this Job"
+              onPress={handleApply}
+              fullWidth
+              size="large"
+              style={styles.applyButton}
+              leftIcon={<Ionicons name="paper-plane-outline" size={20} color={Colors.white} />}
+            />
+          )}
+        </View>
         <View style={styles.spacing} />
       </ScrollView>
     </Screen>
@@ -214,116 +196,89 @@ export default function JobDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  loaderContainer: {
-    flex: 1,
+  scrollContent: { paddingBottom: 40 },
+  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 300 },
+  headerGradient: {
+    paddingTop: 60,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    marginTop: -40,
+  },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  errorText: {
-    fontSize: 16,
-    color: '#FF3B30',
-    textAlign: 'center',
-    marginTop: 32,
-  },
-  header: {
-    marginBottom: 16,
-  },
-  titleSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
-    flex: 1,
-  },
-  company: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  companyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  viewReviewsText: {
-    fontSize: 12,
-    color: '#007AFF',
-    fontWeight: '600',
-  },
-  section: {
-    gap: 12,
-    marginTop: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  label: {
-    fontSize: 14,
-    color: '#666666',
-    fontWeight: '500',
-  },
-  value: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
-  },
-  expired: {
-    color: '#FF3B30',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000000',
+    fontSize: 26,
+    fontWeight: '800' as any,
+    color: Colors.white,
     marginBottom: 12,
   },
-  description: {
-    fontSize: 14,
-    color: '#666666',
-    lineHeight: 22,
-  },
-  skillsList: {
+  companyInfo: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginBottom: 24,
     gap: 8,
   },
-  infoText: {
-    fontSize: 13,
-    color: '#666666',
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  applyButton: {
-    marginVertical: 16,
-  },
-  appliedCard: {
-    backgroundColor: '#D1F4E0',
-    marginVertical: 16,
-  },
-  appliedText: {
+  companyName: {
     fontSize: 14,
-    color: '#186A3B',
-    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '600' as any,
   },
-  expiredCard: {
-    backgroundColor: '#FADBD8',
-    marginVertical: 16,
+  reviewBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
-  expiredText: {
-    fontSize: 14,
-    color: '#78281F',
-    fontWeight: '600',
+  reviewText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700' as any,
   },
-  spacing: {
-    height: 20,
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 20,
+    padding: 16,
   },
+  statItem: { flex: 1, alignItems: 'center' },
+  statLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', marginBottom: 4 },
+  statValue: { fontSize: 14, fontWeight: '700' as any, color: Colors.white },
+  statDivider: { width: 1, height: 24, backgroundColor: 'rgba(255,255,255,0.1)' },
+  contentPadding: { paddingHorizontal: 16, marginTop: 16, gap: 12 },
+  detailsCard: { borderRadius: 24, borderWidth: 1, borderColor: Colors.gray[100], ...Shadows.sm },
+  sectionTitle: { fontSize: 16, fontWeight: '700' as any, color: Colors.black, marginBottom: 16 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  infoLabel: { fontSize: 13, color: Colors.textLight, fontWeight: '500' as any, width: 70 },
+  infoValue: { fontSize: 13, fontWeight: '700' as any, color: Colors.text, flex: 1 },
+  descriptionCard: { borderRadius: 24, borderWidth: 1, borderColor: Colors.gray[100], ...Shadows.sm },
+  descriptionText: { fontSize: 14, color: Colors.text, lineHeight: 22 },
+  statusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    gap: 12,
+    marginTop: 8,
+  },
+  statusText: { fontSize: 15, fontWeight: '700' as any },
+  applyButton: { marginTop: 8, borderRadius: 20 },
+  expired: { color: Colors.danger },
+  spacing: { height: 40 },
+  errorText: { fontSize: 16, color: Colors.danger, textAlign: 'center', marginTop: 100 },
 });

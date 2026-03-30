@@ -1,11 +1,12 @@
 export const Colors = {
-  primary: '#4F46E5', // Indigo 600
-  primaryDark: '#4338CA', // Indigo 700
-  primaryLight: '#818CF8', // Indigo 400
-  secondary: '#8B5CF6', // Violet 500
-  accent: '#FBBF24', // Amber 400
+  primary: '#6366F1', // Indigo 500
+  primaryDark: '#4F46E5', // Indigo 600
+  primaryLight: '#A5B4FC', // Indigo 300
+  secondary: '#A855F7', // Purple 500
+  secondaryDark: '#9333EA', // Purple 600
+  accent: '#F59E0B', // Amber 500
   success: '#10B981', // Emerald 500
-  danger: '#F43F5E', // Rose 500
+  danger: '#EF4444', // Red 500
   warning: '#F59E0B', // Amber 500
   info: '#3B82F6', // Blue 500
   white: '#FFFFFF',
@@ -28,6 +29,9 @@ export const Colors = {
   text: '#1E293B', // Slate 800
   textLight: '#64748B', // Slate 500
   border: '#E2E8F0', // Slate 200
+  glass: 'rgba(255, 255, 255, 0.25)',
+  glassDark: 'rgba(0, 0, 0, 0.05)',
+  indigoGlow: 'rgba(99, 102, 241, 0.15)',
 };
 
 export const Spacing = {

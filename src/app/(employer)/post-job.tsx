@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,8 @@ import {
 import { useRouter } from 'expo-router';
 import { Screen, TextField, Button, Card } from '@components/index';
 import { useAuth } from '@context/AuthContext';
-import { jobAPI } from '@api/index';
-import { JobType } from '@mytypes/index';
+import { jobAPI, userAPI } from '@api/index';
+import { JobType, EmployerProfile } from '@mytypes/index';
 import { getErrorMessage } from '@utils/helpers';
 import { Colors, Typography, Shadows } from '@utils/theme';
 
@@ -37,6 +37,13 @@ export default function PostJobScreen() {
 
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [profile, setProfile] = useState<EmployerProfile | null>(null);
+
+  useEffect(() => {
+    userAPI.getEmployerProfile().then(res => {
+      if (res.success && res.data) setProfile(res.data);
+    }).catch(err => console.error('PostJob: Failed to fetch profile:', err));
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -104,6 +111,18 @@ export default function PostJobScreen() {
       return;
     }
 
+    if (profile && profile.walletBalance < Number(formData.budget)) {
+      Alert.alert(
+        'Insufficient Balance',
+        `Your current balance is ₹${profile.walletBalance}, but the job budget is ₹${formData.budget}. Please add cash to your wallet.`,
+        [
+          { text: 'Add Cash', onPress: () => router.push('/wallet') },
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -131,9 +150,11 @@ export default function PostJobScreen() {
             {
               text: 'View Job',
               onPress: () => {
+                const id = response.data?.id || (response.data as any)?._id;
+                console.log('PostJob: Navigating to details with id =', id);
                 router.push({
                   pathname: '/(employer)/job-details',
-                  params: { jobId: response.data?.id },
+                  params: { jobId: id },
                 });
               },
             },
@@ -324,27 +345,31 @@ export default function PostJobScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.background,
   },
   scrollContent: {
     paddingBottom: 40,
+    paddingHorizontal: 16,
   },
   sectionCard: {
-    marginBottom: 4,
+    marginBottom: 16,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: Colors.gray[100],
+    ...Shadows.sm,
   },
   sectionTitle: {
     fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.bold as any,
-    color: Colors.primary,
-    marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.primary,
-    paddingLeft: 12,
+    fontWeight: '800' as any,
+    color: Colors.primaryDark,
+    marginBottom: 20,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   fieldLabel: {
     fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold as any,
-    marginBottom: 10,
+    fontWeight: '700' as any,
+    marginBottom: 12,
     color: Colors.text,
   },
   typeSelector: {
@@ -356,22 +381,22 @@ const styles = StyleSheet.create({
   },
   typeButton: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    height: 52,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: 12,
+    borderColor: Colors.gray[200],
+    borderRadius: 16,
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: Colors.white,
   },
   typeButtonActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-    ...Shadows.sm,
+    backgroundColor: Colors.primaryDark,
+    borderColor: Colors.primaryDark,
+    ...Shadows.md,
   },
   typeButtonText: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold as any,
+    fontSize: 14,
+    fontWeight: '700' as any,
     color: Colors.textLight,
   },
   typeButtonTextActive: {
@@ -385,10 +410,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   buttonContainer: {
-    marginVertical: 20,
-    paddingHorizontal: 4,
+    marginVertical: 24,
   },
   spacing: {
-    height: 40,
+    height: 60,
   },
 });

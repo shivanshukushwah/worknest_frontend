@@ -91,7 +91,7 @@ export default function MyJobsScreen() {
       onPress={() =>
         router.push({
           pathname: '/(employer)/job-details',
-          params: { jobId: item.id },
+          params: { jobId: item.id || (item as any)._id },
         })
       }
     >
@@ -130,12 +130,12 @@ export default function MyJobsScreen() {
             title="View Applicants"
             variant="accent"
             size="small"
-            onPress={() =>
-              router.push({
-                pathname: '/(employer)/applicants',
-                params: { jobId: item.id },
-              })
-            }
+        onPress={() =>
+          router.push({
+            pathname: '/(employer)/applicants',
+            params: { jobId: item.id || (item as any)._id },
+          })
+        }
             style={styles.actionButton}
           />
         </View>
@@ -171,53 +171,55 @@ export default function MyJobsScreen() {
       <FlatList
         data={jobs}
         renderItem={renderJobItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id || (item as any)._id}
         ListHeaderComponent={
-          <>
+          <View style={styles.headerSection}>
             <LinearGradient
-              colors={[Colors.primary, Colors.secondary]}
+              colors={[Colors.primaryDark, Colors.secondaryDark]}
               start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.balanceCard}
+              end={{ x: 1, y: 0 }}
+              style={styles.headerGradient}
             >
-              <View style={styles.balanceHeader}>
+              <View style={styles.topHeaderRow}>
                 <View>
-                  <Text style={styles.balanceLabel}>Account Balance</Text>
-                  <Text style={styles.balanceAmount}>{formatCurrency(profile?.walletBalance || 0)}</Text>
+                  <Text style={styles.welcomeText}>Welcome back,</Text>
+                  <Text style={styles.businessHeaderName}>{profile?.businessName || 'Business'}</Text>
                 </View>
                 <TouchableOpacity 
-                  style={styles.walletIcon}
+                  style={styles.walletHeaderBadge}
                   onPress={() => router.push('/wallet')}
                 >
-                  <Ionicons name="wallet-outline" size={28} color={Colors.white} />
+                  <Ionicons name="wallet" size={16} color={Colors.white} />
+                  <Text style={styles.walletBadgeText}>{formatCurrency(profile?.walletBalance || 0)}</Text>
                 </TouchableOpacity>
               </View>
-              
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{profile?.activeJobsCount || 0}</Text>
-                  <Text style={styles.statLabel}>Active Jobs</Text>
+
+              <View style={styles.quickStatsRow}>
+                <View style={styles.quickStatItem}>
+                  <Text style={styles.quickStatValue}>{profile?.activeJobsCount || 0}</Text>
+                  <Text style={styles.quickStatLabel}>Active</Text>
                 </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{jobs.length}</Text>
-                  <Text style={styles.statLabel}>Total Posted</Text>
+                <View style={styles.quickStatDivider} />
+                <View style={styles.quickStatItem}>
+                  <Text style={styles.quickStatValue}>{jobs.length}</Text>
+                  <Text style={styles.quickStatLabel}>Total</Text>
                 </View>
+                <TouchableOpacity 
+                  style={styles.postJobCircle}
+                  onPress={() => router.push('/(employer)/post-job')}
+                >
+                  <Ionicons name="add" size={24} color={Colors.primary} />
+                </TouchableOpacity>
               </View>
             </LinearGradient>
-
-            <View style={styles.topButton}>
-              <Button
-                title="Post New Job"
-                onPress={() => router.push('/(employer)/post-job')}
-                fullWidth
-                size="large"
-                leftIcon={<Ionicons name="add-circle-outline" size={20} color={Colors.white} />}
-              />
+            
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitleHeader}>My Job Listings</Text>
+              <TouchableOpacity onPress={onRefresh}>
+                <Ionicons name="refresh" size={20} color={Colors.primary} />
+              </TouchableOpacity>
             </View>
-
-            {jobs.length > 0 && <Text style={styles.sectionTitleHeader}>My Active Listings</Text>}
-          </>
+          </View>
         }
         refreshControl={
           <RefreshControl 
@@ -229,10 +231,10 @@ export default function MyJobsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
+            <Ionicons name="briefcase-outline" size={64} color={Colors.gray[300]} />
             <Text style={styles.emptyText}>No jobs posted yet</Text>
             <Button
               title="Post Your First Job"
-              variant="primary"
               onPress={() => router.push('/(employer)/post-job')}
               style={styles.emptyButton}
             />
@@ -246,75 +248,108 @@ export default function MyJobsScreen() {
 }
 
 const styles = StyleSheet.create({
-  balanceCard: {
-    padding: 20,
-    borderRadius: 24,
-    marginBottom: 20,
-    ...Shadows.md,
+  headerSection: {
+    marginBottom: 16,
   },
-  balanceHeader: {
+  headerGradient: {
+    paddingTop: 60,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    marginTop: -40,
+  },
+  topHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
-  balanceLabel: {
-    color: 'rgba(255,255,255,0.8)',
+  welcomeText: {
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 14,
-    fontWeight: '600' as any,
-    marginBottom: 4,
+    fontWeight: '500' as any,
   },
-  balanceAmount: {
+  businessHeaderName: {
     color: Colors.white,
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: '800' as any,
   },
-  walletIcon: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: 12,
-    borderRadius: 16,
-  },
-  statsContainer: {
+  walletHeaderBadge: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 16,
-    padding: 16,
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    gap: 6,
   },
-  statItem: {
+  walletBadgeText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontWeight: '700' as any,
+  },
+  quickStatsRow: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 24,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  quickStatItem: {
     flex: 1,
     alignItems: 'center',
   },
-  statValue: {
+  quickStatValue: {
     color: Colors.white,
     fontSize: 18,
     fontWeight: '700' as any,
   },
-  statLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 12,
-    marginTop: 2,
+  quickStatLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 10,
+    textTransform: 'uppercase',
   },
-  statDivider: {
+  quickStatDivider: {
     width: 1,
-    height: 30,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    height: 24,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  topButton: {
-    marginBottom: 24,
+  postJobCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Shadows.sm,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 12,
   },
   sectionTitleHeader: {
     fontSize: 18,
     fontWeight: '700' as any,
-    color: Colors.text,
-    marginBottom: 16,
-    marginLeft: 4,
+    color: Colors.black,
   },
   listContent: {
-    paddingBottom: 24,
+    paddingBottom: 40,
+    paddingHorizontal: 16,
   },
   cardWrapper: {
-    marginBottom: 4,
+    marginBottom: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.gray[100],
+    ...Shadows.sm,
   },
   jobCard: {
     gap: 12,
@@ -326,18 +361,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   jobTitle: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.bold as any,
+    fontSize: 16,
+    fontWeight: '700' as any,
     color: Colors.black,
     flex: 1,
   },
   details: {
-    gap: 12,
+    gap: 8,
     backgroundColor: Colors.gray[50],
     padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.gray[100],
+    borderRadius: 12,
   },
   detailRow: {
     flexDirection: 'row',
@@ -348,36 +381,37 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   label: {
-    fontSize: Typography.fontSize.xs,
+    fontSize: 10,
     color: Colors.textLight,
-    fontWeight: Typography.fontWeight.medium as any,
+    fontWeight: '600' as any,
     textTransform: 'uppercase',
   },
   value: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold as any,
+    fontSize: 13,
+    fontWeight: '700' as any,
     color: Colors.text,
   },
   actionButton: {
     marginTop: 4,
+    borderRadius: 12,
+    height: 44,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 24,
   },
   errorText: {
-    fontSize: Typography.fontSize.md,
+    fontSize: 16,
     color: Colors.danger,
     marginBottom: 16,
     textAlign: 'center',
   },
   retryButton: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: 14,
     color: Colors.primary,
-    fontWeight: Typography.fontWeight.semibold as any,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    fontWeight: '600' as any,
   },
   loaderContainer: {
     flex: 1,
@@ -385,17 +419,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 80,
+    paddingVertical: 60,
   },
   emptyText: {
-    fontSize: Typography.fontSize.md,
+    fontSize: 16,
     color: Colors.gray[400],
-    marginBottom: 16,
+    marginTop: 16,
+    marginBottom: 24,
   },
   emptyButton: {
-    marginTop: 4,
+    width: 200,
   },
 });

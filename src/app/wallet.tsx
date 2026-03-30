@@ -90,8 +90,13 @@ export default function WalletScreen() {
           fetchWalletData();
         }
       }
-    } catch (err) {
-      Alert.alert('Error', `Failed to ${modalType}`);
+    } catch (err: any) {
+      console.error(`Wallet: ${modalType} error:`, err?.message || err);
+      if (err.response?.data) {
+        console.log('Wallet: error details:', JSON.stringify(err.response.data, null, 2));
+      }
+      const msg = err.response?.data?.message || err.message || `Failed to ${modalType}`;
+      Alert.alert('Error', msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -115,31 +120,46 @@ export default function WalletScreen() {
         showsVerticalScrollIndicator={false}
       >
         <LinearGradient
-          colors={[Colors.primary, Colors.secondary]}
+          colors={[Colors.primaryDark, Colors.secondaryDark]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.balanceCard}
         >
-          <Text style={styles.balanceLabel}>Total Balance</Text>
+          <View style={styles.cardHeader}>
+            <Text style={styles.balanceLabel}>Available Balance</Text>
+            <View style={styles.chip}>
+              <Text style={styles.chipText}>SECURE</Text>
+            </View>
+          </View>
           <Text style={styles.balanceAmount}>{formatCurrency(wallet?.balance || 0)}</Text>
           <View style={styles.cardFooter}>
-            <View style={styles.cardDot} />
-            <Text style={styles.cardStatus}>Secured by Worknest Pay</Text>
+            <Ionicons name="shield-checkmark" size={16} color="rgba(255,255,255,0.6)" />
+            <Text style={styles.cardStatus}>Protected by Worknest Escrow</Text>
           </View>
         </LinearGradient>
 
         <View style={styles.buttonGroup}>
-          <Button
-            title="Add Cash"
+          <TouchableOpacity 
+            style={[styles.bigActionBtn, { backgroundColor: Colors.primary }]}
             onPress={() => handleOpenModal('deposit')}
-            style={styles.actionBtn}
-          />
-          <Button
-            title="Withdraw"
-            variant="outline"
+          >
+            <LinearGradient
+              colors={[Colors.primary, Colors.primaryDark]}
+              style={styles.btnGradient}
+            >
+              <Ionicons name="add-circle" size={24} color={Colors.white} />
+              <Text style={styles.bigActionBtnText}>Add Cash</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.bigActionBtn, { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: Colors.primaryLight }]}
             onPress={() => handleOpenModal('withdraw')}
-            style={styles.actionBtn}
-          />
+          >
+            <View style={styles.btnGradient}>
+              <Ionicons name="arrow-down-circle-outline" size={24} color={Colors.primary} />
+              <Text style={[styles.bigActionBtnText, { color: Colors.primary }]}>Withdraw</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         <Modal
@@ -237,49 +257,129 @@ const styles = StyleSheet.create({
   loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   contentContainer: { padding: 20 },
   balanceCard: {
-    borderRadius: 24,
+    borderRadius: 32,
     padding: 24,
     marginBottom: 24,
     ...Shadows.lg,
+    minHeight: 180,
+    justifyContent: 'center',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   balanceLabel: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '600' as any,
-    textTransform: 'uppercase',
     letterSpacing: 1,
   },
+  chip: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  chipText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700' as any,
+  },
   balanceAmount: {
-    fontSize: 38,
+    fontSize: 42,
     fontWeight: '800' as any,
     color: '#FFFFFF',
-    marginVertical: 12,
+    marginVertical: 4,
   },
-  cardFooter: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-  cardDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.accent, marginRight: 8 },
-  cardStatus: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '500' as any },
-  buttonGroup: { flexDirection: 'row', gap: 12, marginBottom: 32 },
-  actionBtn: { flex: 1, borderRadius: 16 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  transactionTitle: { fontSize: 18, fontWeight: '700' as any, color: Colors.text },
-  viewAll: { fontSize: 14, color: Colors.primary, fontWeight: '600' as any },
-  transactionCard: { padding: 0, overflow: 'hidden' },
+  cardFooter: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginTop: 12,
+    gap: 6,
+  },
+  cardStatus: { 
+    fontSize: 12, 
+    color: 'rgba(255,255,255,0.6)', 
+    fontWeight: '500' as any 
+  },
+  buttonGroup: { 
+    flexDirection: 'row', 
+    gap: 16, 
+    marginBottom: 32 
+  },
+  bigActionBtn: { 
+    flex: 1, 
+    height: 70,
+    borderRadius: 20, 
+    overflow: 'hidden',
+    ...Shadows.md,
+  },
+  btnGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+  },
+  bigActionBtnText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '700' as any,
+  },
+  sectionHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 16 
+  },
+  transactionTitle: { 
+    fontSize: 18, 
+    fontWeight: '700' as any, 
+    color: Colors.text 
+  },
+  viewAll: { 
+    fontSize: 14, 
+    color: Colors.primary, 
+    fontWeight: '600' as any 
+  },
+  transactionCard: { 
+    padding: 0, 
+    overflow: 'hidden',
+    borderRadius: 24,
+  },
   amount: { fontSize: 15, fontWeight: '700' as any },
   credit: { color: Colors.success },
   debit: { color: Colors.danger },
-  emptyCard: { padding: 40, alignItems: 'center', backgroundColor: Colors.gray[50] },
-  emptyText: { fontSize: 16, color: Colors.textLight, marginTop: 12, fontWeight: '500' as any },
-  separator: { height: 1, backgroundColor: Colors.gray[100], marginLeft: 56 },
+  emptyCard: { 
+    padding: 40, 
+    alignItems: 'center', 
+    backgroundColor: Colors.gray[50],
+    borderRadius: 24,
+  },
+  emptyText: { 
+    fontSize: 16, 
+    color: Colors.textLight, 
+    marginTop: 12, 
+    fontWeight: '500' as any 
+  },
+  separator: { 
+    height: 1, 
+    backgroundColor: Colors.gray[100], 
+    marginLeft: 56 
+  },
   spacing: { height: 40 },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     padding: 24,
   },
   modalContent: {
     backgroundColor: Colors.white,
-    borderRadius: 24,
+    borderRadius: 32,
     padding: 24,
     ...Shadows.lg,
   },
@@ -290,8 +390,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '700' as any,
+    fontSize: 22,
+    fontWeight: '800' as any,
     color: Colors.text,
   },
   modalSubtitle: {
@@ -304,27 +404,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.gray[50],
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    borderWidth: 1.5,
     borderColor: Colors.gray[200],
     marginBottom: 24,
+    height: 70,
   },
   currencySymbol: {
-    fontSize: 24,
-    fontWeight: '700' as any,
-    color: Colors.text,
-    marginRight: 8,
+    fontSize: 28,
+    fontWeight: '800' as any,
+    color: Colors.primary,
+    marginRight: 10,
   },
   amountInput: {
     flex: 1,
-    fontSize: 24,
-    fontWeight: '700' as any,
+    fontSize: 28,
+    fontWeight: '800' as any,
     color: Colors.text,
     paddingVertical: 12,
   },
   submitBtn: {
-    borderRadius: 16,
-    height: 56,
+    borderRadius: 20,
+    height: 60,
   },
 });

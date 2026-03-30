@@ -48,6 +48,15 @@ export default function JobsScreen() {
         setJobs(jobsRes.data);
         setPage(1);
         setHasMore(jobsRes.pagination.page < jobsRes.pagination.pages);
+      } else {
+        const fallbackId = (jobsRes.data as any)?._id;
+        if (fallbackId) {
+          console.log('JobsScreen: Found fallback _id', fallbackId);
+          const retryRes = await jobAPI.getJobById(fallbackId);
+          if (retryRes.success && retryRes.data) setJobs([retryRes.data]);
+        } else {
+          console.warn('JobsScreen: API success was true but data was missing and no fallback _id found');
+        }
       }
 
       if (profileRes.success && profileRes.data) {
@@ -105,7 +114,7 @@ export default function JobsScreen() {
       onPress={() =>
         router.push({
           pathname: '/(student)/job-details',
-          params: { jobId: item.id },
+          params: { jobId: item.id || (item as any)._id },
         })
       }
     >
@@ -178,43 +187,55 @@ export default function JobsScreen() {
       <FlatList
         data={jobs}
         renderItem={renderJobItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id || (item as any)._id}
         ListHeaderComponent={
-          <>
+          <View style={styles.headerSection}>
             <LinearGradient
-              colors={[Colors.primary, Colors.secondary]}
+              colors={[Colors.primaryDark, Colors.secondaryDark]}
               start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.balanceCard}
+              end={{ x: 1, y: 0 }}
+              style={styles.headerGradient}
             >
-              <View style={styles.balanceHeader}>
+              <View style={styles.topHeaderRow}>
                 <View>
-                  <Text style={styles.balanceLabel}>Wallet Balance</Text>
-                  <Text style={styles.balanceAmount}>{formatCurrency(profile?.walletBalance || 0)}</Text>
+                  <Text style={styles.welcomeText}>Hello,</Text>
+                  <Text style={styles.personHeaderName}>{profile?.name || 'Student'}</Text>
                 </View>
-                <TouchableOpacity 
-                  style={styles.walletIcon}
-                  onPress={() => router.push('/wallet')}
-                >
-                  <Ionicons name="wallet-outline" size={28} color={Colors.white} />
-                </TouchableOpacity>
+                <View style={styles.headerBadges}>
+                  <View style={styles.skillBadge}>
+                    <Ionicons name="star" size={14} color={Colors.accent} />
+                    <Text style={styles.skillBadgeText}>{profile?.skillScore || 0}</Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.walletHeaderBadge}
+                    onPress={() => router.push('/wallet')}
+                  >
+                    <Ionicons name="wallet" size={14} color={Colors.white} />
+                    <Text style={styles.walletBadgeText}>{formatCurrency(profile?.walletBalance || 0)}</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-              
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{profile?.completedJobsCount || 0}</Text>
-                  <Text style={styles.statLabel}>Completed</Text>
+
+              <View style={styles.quickStatsRow}>
+                <View style={styles.quickStatItem}>
+                  <Text style={styles.quickStatValue}>{profile?.completedJobsCount || 0}</Text>
+                  <Text style={styles.quickStatLabel}>Completed</Text>
                 </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{profile?.skillScore || 0}</Text>
-                  <Text style={styles.statLabel}>Skill Score</Text>
+                <View style={styles.quickStatDivider} />
+                <View style={styles.quickStatItem}>
+                  <Text style={styles.quickStatValue}>{jobs.length}</Text>
+                  <Text style={styles.quickStatLabel}>Available</Text>
                 </View>
               </View>
             </LinearGradient>
-
-            <Text style={styles.sectionTitleHeader}>Available Opportunities</Text>
-          </>
+            
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitleHeader}>Available Opportunities</Text>
+              <TouchableOpacity onPress={onRefresh}>
+                <Ionicons name="refresh" size={20} color={Colors.primary} />
+              </TouchableOpacity>
+            </View>
+          </View>
         }
         onEndReached={fetchMoreJobs}
         onEndReachedThreshold={0.5}
@@ -228,6 +249,7 @@ export default function JobsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
+            <Ionicons name="search-outline" size={64} color={Colors.gray[300]} />
             <Text style={styles.emptyText}>No jobs available</Text>
           </View>
         }
@@ -239,77 +261,121 @@ export default function JobsScreen() {
 }
 
 const styles = StyleSheet.create({
-  balanceCard: {
-    padding: 20,
-    borderRadius: 24,
-    marginBottom: 20,
-    marginTop: 8,
-    ...Shadows.md,
+  headerSection: {
+    marginBottom: 16,
   },
-  balanceHeader: {
+  headerGradient: {
+    paddingTop: 60,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    marginTop: -40,
+  },
+  topHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
-  balanceLabel: {
-    color: 'rgba(255,255,255,0.8)',
+  welcomeText: {
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 14,
-    fontWeight: '600' as any,
-    marginBottom: 4,
+    fontWeight: '500' as any,
   },
-  balanceAmount: {
+  personHeaderName: {
     color: Colors.white,
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: '800' as any,
   },
-  walletIcon: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: 12,
-    borderRadius: 16,
-  },
-  statsContainer: {
+  headerBadges: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    gap: 8,
+  },
+  skillBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 16,
-    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    gap: 4,
+  },
+  skillBadgeText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: '700' as any,
+  },
+  walletHeaderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    gap: 4,
+  },
+  walletBadgeText: {
+    color: Colors.white,
+    fontSize: 12,
+    fontWeight: '700' as any,
+  },
+  quickStatsRow: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 24,
+    padding: 12,
     alignItems: 'center',
   },
-  statItem: {
+  quickStatItem: {
     flex: 1,
     alignItems: 'center',
   },
-  statValue: {
+  quickStatValue: {
     color: Colors.white,
     fontSize: 18,
     fontWeight: '700' as any,
   },
-  statLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 12,
-    marginTop: 2,
+  quickStatLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 10,
+    textTransform: 'uppercase',
   },
-  statDivider: {
+  quickStatDivider: {
     width: 1,
-    height: 30,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    height: 24,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 12,
   },
   sectionTitleHeader: {
     fontSize: 18,
     fontWeight: '700' as any,
-    color: Colors.text,
-    marginBottom: 16,
-    marginLeft: 4,
+    color: Colors.black,
   },
   listContent: {
-    paddingBottom: 24,
-    paddingHorizontal: 4,
+    paddingBottom: 40,
+    paddingHorizontal: 16,
   },
   cardWrapper: {
-    marginBottom: 4,
+    marginBottom: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.gray[100],
+    ...Shadows.sm,
   },
   jobCard: {
-    gap: 8,
+    gap: 12,
   },
   jobHeader: {
     flexDirection: 'row',
@@ -318,66 +384,66 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   jobTitle: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.bold as any,
+    fontSize: 16,
+    fontWeight: '700' as any,
     color: Colors.black,
     flex: 1,
   },
   company: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: 13,
     color: Colors.textLight,
-    marginTop: 2,
+    fontWeight: '500' as any,
   },
   jobDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 4,
+    backgroundColor: Colors.gray[50],
+    padding: 12,
+    borderRadius: 12,
   },
   salary: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.bold as any,
+    fontSize: 16,
+    fontWeight: '800' as any,
     color: Colors.primary,
   },
   positions: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.gray[500],
+    fontSize: 11,
+    color: Colors.textLight,
+    fontWeight: '600' as any,
   },
   description: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: 13,
     color: Colors.text,
-    lineHeight: 20,
-    marginTop: 4,
+    lineHeight: 18,
   },
   jobFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: Colors.gray[100],
-    paddingTop: 8,
+    marginTop: 4,
   },
   deadline: {
-    fontSize: Typography.fontSize.xs,
+    fontSize: 11,
     color: Colors.gray[400],
+    fontWeight: '500' as any,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 24,
   },
   errorText: {
-    fontSize: Typography.fontSize.md,
+    fontSize: 16,
     color: Colors.danger,
-    marginBottom: 16,
+    textAlign: 'center',
   },
   retryButton: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: 14,
     color: Colors.primary,
-    fontWeight: Typography.fontWeight.semibold as any,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    fontWeight: '600' as any,
+    marginTop: 12,
   },
   loaderContainer: {
     flex: 1,
@@ -385,13 +451,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingVertical: 80,
   },
   emptyText: {
-    fontSize: Typography.fontSize.md,
+    fontSize: 16,
     color: Colors.gray[400],
+    marginTop: 16,
   },
 });
