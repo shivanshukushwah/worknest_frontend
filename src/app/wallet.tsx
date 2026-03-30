@@ -7,6 +7,11 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Screen, Card, Button, ListItem } from '@components/index';
 import { walletAPI } from '@api/index';
@@ -25,6 +30,11 @@ export default function WalletScreen() {
   useEffect(() => {
     fetchWalletData();
   }, []);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState<'deposit' | 'withdraw'>('deposit');
+  const [amount, setAmount] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchWalletData = async () => {
     try {
@@ -51,62 +61,40 @@ export default function WalletScreen() {
     setRefreshing(false);
   };
 
-  const handleDeposit = () => {
-    Alert.prompt(
-      'Deposit Amount',
-      'Enter the amount you want to deposit (₹)',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Deposit',
-          onPress: async (amount: string | undefined) => {
-            if (!amount || isNaN(Number(amount))) {
-              Alert.alert('Error', 'Please enter a valid amount');
-              return;
-            }
-            try {
-              const res = await walletAPI.initiateDeposit(Number(amount));
-              if (res.success) {
-                Alert.alert('Success', 'Deposit initiated successfully!');
-                fetchWalletData();
-              }
-            } catch (err) {
-              Alert.alert('Error', 'Failed to initiate deposit');
-            }
-          },
-        },
-      ],
-      'plain-text'
-    );
+  const handleOpenModal = (type: 'deposit' | 'withdraw') => {
+    setModalType(type);
+    setAmount('');
+    setModalVisible(true);
   };
 
-  const handleWithdraw = () => {
-    Alert.prompt(
-      'Withdrawal Amount',
-      'Enter the amount you want to withdraw (₹)',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Withdraw',
-          onPress: async (amount: string | undefined) => {
-            if (!amount || isNaN(Number(amount))) {
-              Alert.alert('Error', 'Please enter a valid amount');
-              return;
-            }
-            try {
-              const res = await walletAPI.createWithdrawalRequest({ amount: Number(amount) });
-              if (res.success) {
-                Alert.alert('Success', 'Withdrawal request submitted successfully');
-                fetchWalletData();
-              }
-            } catch (err) {
-              Alert.alert('Error', 'Failed to create withdrawal request');
-            }
-          },
-        },
-      ],
-      'plain-text'
-    );
+  const handleSubmit = async () => {
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      if (modalType === 'deposit') {
+        const res = await walletAPI.initiateDeposit(Number(amount));
+        if (res.success) {
+          Alert.alert('Success', 'Deposit initiated successfully!');
+          setModalVisible(false);
+          fetchWalletData();
+        }
+      } else {
+        const res = await walletAPI.createWithdrawalRequest({ amount: Number(amount) });
+        if (res.success) {
+          Alert.alert('Success', 'Withdrawal request submitted successfully');
+          setModalVisible(false);
+          fetchWalletData();
+        }
+      }
+    } catch (err) {
+      Alert.alert('Error', `Failed to ${modalType}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -143,16 +131,62 @@ export default function WalletScreen() {
         <View style={styles.buttonGroup}>
           <Button
             title="Add Cash"
-            onPress={handleDeposit}
+            onPress={() => handleOpenModal('deposit')}
             style={styles.actionBtn}
           />
           <Button
             title="Withdraw"
             variant="outline"
-            onPress={handleWithdraw}
+            onPress={() => handleOpenModal('withdraw')}
             style={styles.actionBtn}
           />
         </View>
+
+        <Modal
+          visible={modalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalOverlay}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>
+                  {modalType === 'deposit' ? 'Add Cash' : 'Withdraw Cash'}
+                </Text>
+                <TouchableOpacity onPress={() => setModalVisible(false)}>
+                  <Ionicons name="close" size={24} color={Colors.textLight} />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalSubtitle}>
+                Enter the amount you want to {modalType === 'deposit' ? 'deposit' : 'withdraw'} below.
+              </Text>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.currencySymbol}>₹</Text>
+                <TextInput
+                  style={styles.amountInput}
+                  placeholder="0.00"
+                  value={amount}
+                  onChangeText={setAmount}
+                  keyboardType="decimal-pad"
+                  autoFocus
+                />
+              </View>
+
+              <Button
+                title={modalType === 'deposit' ? 'Add Cash' : 'Withdraw Cash'}
+                onPress={handleSubmit}
+                loading={isSubmitting}
+                style={styles.submitBtn}
+              />
+            </View>
+          </KeyboardAvoidingView>
+        </Modal>
 
         <View style={styles.sectionHeader}>
           <Text style={styles.transactionTitle}>Transaction History</Text>
@@ -237,4 +271,60 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 16, color: Colors.textLight, marginTop: 12, fontWeight: '500' as any },
   separator: { height: 1, backgroundColor: Colors.gray[100], marginLeft: 56 },
   spacing: { height: 40 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    borderRadius: 24,
+    padding: 24,
+    ...Shadows.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700' as any,
+    color: Colors.text,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: Colors.textLight,
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.gray[50],
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+    marginBottom: 24,
+  },
+  currencySymbol: {
+    fontSize: 24,
+    fontWeight: '700' as any,
+    color: Colors.text,
+    marginRight: 8,
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: 24,
+    fontWeight: '700' as any,
+    color: Colors.text,
+    paddingVertical: 12,
+  },
+  submitBtn: {
+    borderRadius: 16,
+    height: 56,
+  },
 });

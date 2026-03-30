@@ -46,6 +46,25 @@ This builds the APK on your own machine using Gradle.
 
 ---
 
+## Option 3: GitHub Actions (Easiest & Most Reliable)
+This uses GitHub's runners to build your APK automatically. No local setup or Expo cloud limits!
+
+1. **Commit your changes**:
+   ```bash
+   git add .
+   git commit -m "Update build config"
+   git push origin main
+   ```
+2. **Trigger the build**:
+   - Go to your GitHub repository in your browser.
+   - Click the **Actions** tab.
+   - Select **Build Android APK** from the left sidebar.
+   - Click the **Run workflow** dropdown and then the **Run workflow** button.
+3. **Download**: Once finished, download the `worknest-apk` artifact from the bottom of the run page.
+4. **Install**: Unzip the file on your laptop, transfer the `.apk` inside to your phone, and install!
+
+---
+
 ## Troubleshooting
 - **API URL**: Ensure your `EXPO_PUBLIC_API_URL` in `.env` is set to your production backend (Render URL).
 - **Permissions**: I have already added `CAMERA` and `STORAGE` permissions in `app.json`.

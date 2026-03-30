@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  View,
   Text,
   TouchableOpacity,
   StyleSheet,
@@ -25,6 +26,8 @@ interface ButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   fullWidth?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -36,6 +39,8 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   style,
   textStyle,
+  leftIcon,
+  rightIcon,
   fullWidth = false,
 }) => {
   const scale = useSharedValue(1);
@@ -116,15 +121,19 @@ const Button: React.FC<ButtonProps> = ({
           {loading ? (
             <ActivityIndicator color={getTextColor()} />
           ) : (
-            <Text
-              style={[
-                styles.buttonText,
-                { color: getTextColor() },
-                textStyle,
-              ]}
-            >
-              {title}
-            </Text>
+            <View style={styles.contentContainer}>
+              {leftIcon && <View style={styles.iconContainer}>{leftIcon}</View>}
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: getTextColor() },
+                  textStyle,
+                ]}
+              >
+                {title}
+              </Text>
+              {rightIcon && <View style={styles.iconContainerRight}>{rightIcon}</View>}
+            </View>
           )}
         </LinearGradient>
       </TouchableOpacity>
@@ -138,10 +147,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   buttonText: {
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  iconContainer: {
+    marginRight: 8,
+  },
+  iconContainerRight: {
+    marginLeft: 8,
   },
 });
 
