@@ -187,5 +187,3 @@ const styles = StyleSheet.create({
   resendText: { color: '#6366F1', fontWeight: '600', fontSize: 14 },
   resendDisabled: { color: '#64748B' },
 });
-
-});
