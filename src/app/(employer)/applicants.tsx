@@ -59,7 +59,7 @@ export default function ApplicantsScreen() {
 
   const handleHire = async (applicationId: string) => {
     try {
-      const response = await applicationAPI.hireApplicant(applicationId);
+      const response = await applicationAPI.hireApplicant(jobId as string, applicationId);
       if (response.success) {
         Alert.alert('Success', 'Applicant hired successfully');
         fetchApplications();
@@ -79,7 +79,7 @@ export default function ApplicantsScreen() {
           text: 'Reject',
           onPress: async () => {
             try {
-              await applicationAPI.rejectApplication(applicationId);
+              await applicationAPI.rejectApplication(jobId as string, applicationId);
               Alert.alert('Success', 'Application rejected');
               fetchApplications();
             } catch (error) {
@@ -146,7 +146,7 @@ export default function ApplicantsScreen() {
                 variant="secondary"
                 size="small"
                 onPress={() =>
-                  applicationAPI.shortlistApplication(item.id).then(() => fetchApplications())
+                  applicationAPI.shortlistApplication(jobId as string, item.id).then(() => fetchApplications())
                 }
                 style={styles.actionButton}
               />

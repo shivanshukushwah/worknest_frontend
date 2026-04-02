@@ -151,7 +151,7 @@ export const applicationAPI = {
    */
   applyForJob: async (jobId: string, data: any): Promise<APIResponse<JobApplication>> => {
     const api = await getAPI();
-    const response = await api.post(`/api/applications/apply/${jobId}`, data);
+    const response = await api.post(`/api/jobs/${jobId}/apply`, data);
     return response.data;
   },
 
@@ -188,38 +188,42 @@ export const applicationAPI = {
    * Update application status (for employers)
    */
   updateApplicationStatus: async (
+    jobId: string,
     applicationId: string,
     status: ApplicationStatus
   ): Promise<APIResponse<JobApplication>> => {
     const api = await getAPI();
-    const response = await api.put(`/api/applications/${applicationId}`, { status });
+    const endpoint = status === 'hired' || status === 'accepted' 
+      ? `/api/jobs/${jobId}/applications/${applicationId}/accept`
+      : `/api/jobs/${jobId}/applications/${applicationId}/reject`;
+    const response = await api.put(endpoint, { status });
     return response.data;
   },
 
   /**
    * Shortlist application (for online jobs)
    */
-  shortlistApplication: async (applicationId: string): Promise<APIResponse<JobApplication>> => {
+  shortlistApplication: async (jobId: string, applicationId: string): Promise<APIResponse<JobApplication>> => {
     const api = await getAPI();
-    const response = await api.post(`/api/applications/${applicationId}/shortlist`);
+    const response = await api.post(`/api/jobs/${jobId}/applications/${applicationId}/shortlist`);
     return response.data;
   },
 
   /**
    * Reject application
    */
-  rejectApplication: async (applicationId: string): Promise<APIResponse<null>> => {
+  rejectApplication: async (jobId: string, applicationId: string): Promise<APIResponse<null>> => {
     const api = await getAPI();
-    const response = await api.post(`/api/applications/${applicationId}/reject`);
+    const response = await api.put(`/api/jobs/${jobId}/applications/${applicationId}/reject`);
     return response.data;
   },
 
   /**
    * Hire applicant
    */
-  hireApplicant: async (applicationId: string): Promise<APIResponse<JobApplication>> => {
+  hireApplicant: async (jobId: string, applicationId: string): Promise<APIResponse<JobApplication>> => {
     const api = await getAPI();
-    const response = await api.post(`/api/applications/${applicationId}/hire`);
+    const response = await api.put(`/api/jobs/${jobId}/applications/${applicationId}/accept`);
     return response.data;
   },
 };

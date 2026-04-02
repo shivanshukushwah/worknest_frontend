@@ -197,10 +197,13 @@ export const userAPI = {
 
   /**
    * Update user profile (for completing profile after registration)
+   * Note: This uses the student endpoint for general profile updates.
+   * For employer-specific updates, use updateEmployerProfile instead.
    */
   updateProfile: async (data: any): Promise<APIResponse<User>> => {
     const api = await getAPI();
-    const response = await api.put('/api/users/profile', data);
+    // Default to student endpoint; use updateStudentProfile or updateEmployerProfile for role-specific updates
+    const response = await api.put('/api/users/student/me', data);
     return response.data;
   },
 };
