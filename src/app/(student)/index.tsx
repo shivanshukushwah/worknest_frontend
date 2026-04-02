@@ -132,7 +132,7 @@ export default function JobsScreen() {
             )}
           </View>
 
-          <Text style={styles.company}>{item.employer.name}</Text>
+          <Text style={styles.company}>{item.employer?.name || 'Unknown Employer'}</Text>
 
           <View style={styles.jobDetails}>
             <Text style={styles.salary}>{formatSalary(item.salary, item.salaryType)}</Text>

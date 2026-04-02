@@ -84,7 +84,7 @@ export default function MyApplicationsScreen() {
                 color={getStatusColor(item.status)}
               />
             </View>
-            <Text style={styles.company}>{item.job.employer.name}</Text>
+            <Text style={styles.company}>{item.job.employer?.name || 'Unknown Employer'}</Text>
           </View>
 
           <View style={styles.details}>

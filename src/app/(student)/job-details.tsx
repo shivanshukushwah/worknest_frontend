@@ -117,13 +117,15 @@ export default function JobDetailsScreen() {
           
           <View style={styles.companyInfo}>
             <Ionicons name="business" size={16} color="rgba(255,255,255,0.7)" />
-            <Text style={styles.companyName}>{job.employer.name}</Text>
-            <TouchableOpacity
-              onPress={() => router.push({ pathname: '/reviews', params: { userId: job.employer.id || (job.employer as any)._id } })}
-              style={styles.reviewBadge}
-            >
-              <Text style={styles.reviewText}>Reviews</Text>
-            </TouchableOpacity>
+            <Text style={styles.companyName}>{job.employer?.name || 'Unknown Employer'}</Text>
+            {job.employer && (
+              <TouchableOpacity
+                onPress={() => router.push({ pathname: '/reviews', params: { userId: job.employer.id || (job.employer as any)._id } })}
+                style={styles.reviewBadge}
+              >
+                <Text style={styles.reviewText}>Reviews</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.statsRow}>
