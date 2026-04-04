@@ -126,7 +126,7 @@ export default function ApplicantsScreen() {
               </View>
             </View>
           </View>
-          <Badge label={item.status.toUpperCase()} color={getStatusColor(item.status)} />
+          <Badge label={(item.status || 'applied').toUpperCase()} color={getStatusColor(item.status || ApplicationStatus.APPLIED)} />
         </View>
 
         {item.coverLetter && (

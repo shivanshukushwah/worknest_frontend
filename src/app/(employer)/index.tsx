@@ -99,7 +99,10 @@ export default function MyJobsScreen() {
         <View style={styles.jobCard}>
           <View style={styles.header}>
             <Text style={styles.jobTitle} numberOfLines={1}>{item.title}</Text>
-            <Badge label={item.status.toUpperCase()} color={getStatusColor(item.status)} />
+            <Badge 
+              label={(item.status || 'open').toUpperCase()} 
+              color={getStatusColor(item.status || JobStatus.OPEN)} 
+            />
           </View>
 
           <View style={styles.details}>

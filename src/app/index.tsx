@@ -78,10 +78,10 @@ export default function HomeScreen() {
         <View style={styles.jobCard}>
           <View style={styles.jobHeader}>
             <Text style={styles.jobTitle}>{item.title}</Text>
-            {item.applicationStatus && (
+            {(item.applicationStatus || (item as any).status) && (
               <Badge
-                label={item.applicationStatus.toUpperCase()}
-                color={getApplicationStatusColor(item.applicationStatus)}
+                label={(item.applicationStatus || (item as any).status || '').toUpperCase()}
+                color={getApplicationStatusColor(item.applicationStatus || (item as any).status)}
               />
             )}
           </View>
@@ -104,8 +104,8 @@ export default function HomeScreen() {
             <Text style={styles.deadline}>
               Deadline: {formatDate(item.deadline)}
             </Text>
-            {item.type && (
-              <Badge label={item.type.toUpperCase()} color="primary" />
+            {(item.type || item.jobType) && (
+              <Badge label={(item.type || item.jobType || '').toUpperCase()} color="primary" />
             )}
           </View>
         </View>

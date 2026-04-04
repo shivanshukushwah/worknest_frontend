@@ -234,7 +234,7 @@ export default function ProfileScreen() {
               <Text style={styles.userName}>{user.name}</Text>
               <Text style={styles.userEmail}>{user.email}</Text>
               <View style={styles.badgeRow}>
-                <Badge label={user.role.toUpperCase()} color="primary" />
+                <Badge label={(user.role || '').toUpperCase()} color="primary" />
                 {user.isPhoneVerified && <Badge label="VERIFIED" color="success" />}
               </View>
             </View>

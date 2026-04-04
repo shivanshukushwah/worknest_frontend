@@ -80,8 +80,8 @@ export default function MyApplicationsScreen() {
             <View style={styles.titleSection}>
               <Text style={styles.jobTitle}>{item.job.title}</Text>
               <Badge
-                label={item.status.toUpperCase()}
-                color={getStatusColor(item.status)}
+                label={(item.status || 'applied').toUpperCase()}
+                color={getStatusColor(item.status || ApplicationStatus.APPLIED)}
               />
             </View>
             <Text style={styles.company}>{item.job.employer?.name || 'Unknown Employer'}</Text>

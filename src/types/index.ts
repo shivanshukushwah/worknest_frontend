@@ -131,6 +131,7 @@ export interface Job {
   title: string;
   description: string;
   type: JobType;
+  jobType?: JobType; // Support both naming conventions from backend
   salary: number;
   salaryType: 'fixed' | 'hourly' | 'range';
   positionsRequired: number;

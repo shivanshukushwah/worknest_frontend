@@ -126,7 +126,7 @@ export default function JobDetailsScreen() {
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <Ionicons name="arrow-back" size={24} color={Colors.white} />
             </TouchableOpacity>
-            <Badge label={job.status.toUpperCase()} color={getStatusColor(job.status)} />
+            <Badge label={(job.status || 'open').toUpperCase()} color={getStatusColor(job.status || JobStatus.OPEN)} />
           </View>
           <Text style={styles.title}>{job.title}</Text>
           

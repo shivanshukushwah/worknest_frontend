@@ -109,7 +109,7 @@ export default function JobDetailsScreen() {
               <Ionicons name="arrow-back" size={24} color={Colors.white} />
             </TouchableOpacity>
             {applicationStatus && (
-              <Badge label={applicationStatus.toUpperCase()} color={getStatusColor(applicationStatus)} />
+              <Badge label={(applicationStatus || '').toUpperCase()} color={getStatusColor(applicationStatus)} />
             )}
           </View>
           
