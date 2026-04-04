@@ -54,6 +54,7 @@
     "babel-preset-expo": "^54.0.9",
     "cross-env": "^10.1.0",
     "eslint": "^8.56.0",
+    "babel-plugin-module-resolver": "^5.0.0",
     "jest": "^29.7.0",
     "jest-expo": "~54.0.16",
     "lightningcss": "^1.32.0",
