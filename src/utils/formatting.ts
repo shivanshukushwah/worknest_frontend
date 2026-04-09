@@ -8,7 +8,9 @@ dayjs.extend(relativeTime);
  */
 
 export const formatDate = (date: string | Date): string => {
-  return dayjs(date).format('DD MMM YYYY');
+  if (!date) return 'Flexible';
+  const d = dayjs(date);
+  return d.isValid() ? d.format('DD MMM YYYY') : 'Flexible';
 };
 
 export const formatDateTime = (date: string | Date): string => {
@@ -56,6 +58,7 @@ export const formatLocation = (location: any): string => {
   if (typeof location === 'string') return location;
   
   const parts = [];
+  if (location.address) parts.push(location.address);
   if (location.city) parts.push(location.city);
   if (location.state) parts.push(location.state);
   if (location.country && location.country !== 'India') parts.push(location.country);

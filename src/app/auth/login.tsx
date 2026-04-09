@@ -29,12 +29,12 @@ const { width, height } = Dimensions.get('window');
 export default function LoginScreen() {
   const router = useRouter();
   const { login, isLoading } = useAuth();
+  const [currentStep, setCurrentStep] = useState(0);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>(UserRole.STUDENT);
   const [showPassword, setShowPassword] = useState(false);
-  const [showRolePicker, setShowRolePicker] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; role?: string }>({});
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -46,7 +46,7 @@ export default function LoginScreen() {
       Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
       Animated.spring(slideAnim, { toValue: 0, tension: 50, friction: 7, useNativeDriver: true }),
     ]).start();
-  }, []);
+  }, [currentStep]);
 
   const shake = () => {
     Animated.sequence([
@@ -58,27 +58,40 @@ export default function LoginScreen() {
     ]).start();
   };
 
-  const validateForm = () => {
-    const newErrors: typeof errors = {};
-    if (!email) newErrors.email = 'Email is required';
-    else if (!validateEmail(email)) newErrors.email = 'Invalid email format';
-
-    if (!password) newErrors.password = 'Password is required';
-    else {
-      const pwd = validatePassword(password);
-      if (!pwd.valid) newErrors.password = pwd.message;
+  const validateStep = (step: number) => {
+    const newErrors: any = {};
+    if (step === 0) {
+      if (!role) newErrors.role = 'Role is required';
+    } else {
+      if (!email) newErrors.email = 'Email is required';
+      else if (!validateEmail(email)) newErrors.email = 'Invalid email format';
+      if (!password) newErrors.password = 'Password is required';
     }
-    if (!role) newErrors.role = 'Role is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = async () => {
-    if (!validateForm()) {
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      if (currentStep === 0) {
+        setCurrentStep(1);
+      } else {
+        handleLogin();
+      }
+    } else {
       shake();
-      return;
     }
+  };
 
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(0);
+    } else {
+      router.back();
+    }
+  };
+
+  const handleLogin = async () => {
     try {
       const userData = await login({ email, password, role });
       const userRole = userData?.role || role || UserRole.STUDENT;
@@ -88,6 +101,92 @@ export default function LoginScreen() {
     } catch (error) {
       shake();
       Alert.alert('Login Failed', getErrorMessage(error));
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <MotiView from={{ opacity: 0, translateX: -50 }} animate={{ opacity: 1, translateX: 0 }} transition={{ type: 'timing', duration: 400 }}>
+            <View style={styles.roleWrapper}>
+              <Text style={styles.inputLabel}>Login as</Text>
+              <View style={styles.roleVerticalGroup}>
+                {[UserRole.STUDENT, UserRole.WORKER, UserRole.EMPLOYER].map((r) => (
+                  <TouchableOpacity
+                    key={r}
+                    onPress={() => setRole(r)}
+                    style={[styles.roleCard, role === r && styles.roleCardActive]}
+                  >
+                    <View style={[styles.roleIconBox, role === r && styles.roleIconBoxActive]}>
+                      <MaterialCommunityIcons 
+                        name={
+                          r === UserRole.STUDENT ? 'account-school' : 
+                          r === UserRole.WORKER ? 'account-wrench' : 
+                          'briefcase-account'
+                        } 
+                        size={28} 
+                        color={role === r ? '#FFF' : '#6366F1'} 
+                      />
+                    </View>
+                    <View style={styles.roleTextContainer}>
+                      <Text style={[styles.roleCardTitle, role === r && styles.roleCardTitleActive]}>
+                        {r.charAt(0).toUpperCase() + r.slice(1)}
+                      </Text>
+                    </View>
+                    {role === r && (
+                      <Ionicons name="checkmark-circle" size={24} color="#FFF" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </MotiView>
+        );
+      case 1:
+        return (
+          <MotiView from={{ opacity: 0, translateX: 50 }} animate={{ opacity: 1, translateX: 0 }} transition={{ type: 'timing', duration: 400 }}>
+            <View style={styles.inputGroup}>
+              <TextField
+                label="Email"
+                placeholder="Enter your email"
+                value={email}
+                onChangeText={setEmail}
+                error={errors.email}
+                keyboardType="email-address"
+                leftIcon={<Ionicons name="mail-outline" size={20} color="#94A3B8" />}
+                style={styles.inputStyle}
+              />
+
+              <TextField
+                label="Password"
+                placeholder="Enter your password"
+                value={password}
+                onChangeText={setPassword}
+                error={errors.password}
+                secureTextEntry={!showPassword}
+                leftIcon={<Ionicons name="lock-closed-outline" size={20} color="#94A3B8" />}
+                style={styles.inputStyle}
+                rightIcon={
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                    <MaterialCommunityIcons
+                      name={showPassword ? 'eye' : 'eye-off'}
+                      size={20}
+                      color="#94A3B8"
+                    />
+                  </TouchableOpacity>
+                }
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.forgotBtn}
+              onPress={() => router.push('/auth/forgot-password')}
+            >
+              <Text style={styles.forgotText}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </MotiView>
+        );
     }
   };
 
@@ -130,8 +229,23 @@ export default function LoginScreen() {
           {/* HEADER */}
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
             <Text style={styles.title}>Worknest</Text>
-            <Text style={styles.subtitle}>Welcome back to the future of work</Text>
+            <Text style={styles.subtitle}>
+              {currentStep === 0 ? 'Select your persona' : 'Welcome back to the future of work'}
+            </Text>
           </Animated.View>
+
+          <View style={styles.progressContainer}>
+            {[0, 1].map((i) => (
+              <View 
+                key={i} 
+                style={[
+                  styles.progressDot, 
+                  currentStep >= i && styles.progressDotActive,
+                  currentStep === i && styles.progressDotCurrent
+                ]} 
+              />
+            ))}
+          </View>
 
           {/* CARD */}
           <Animated.View
@@ -143,93 +257,36 @@ export default function LoginScreen() {
               },
             ]}
           >
-            {/* ROLE SELECTOR */}
-            <View style={styles.roleWrapper}>
-              <Text style={styles.inputLabel}>Login as</Text>
-              <View style={styles.roleButtonGroup}>
-                {[UserRole.STUDENT, UserRole.WORKER, UserRole.EMPLOYER].map((r) => (
-                  <TouchableOpacity
-                    key={r}
-                    onPress={() => setRole(r)}
-                    style={[
-                      styles.roleButton,
-                      role === r && styles.roleButtonActive
-                    ]}
-                  >
-                    <MaterialCommunityIcons 
-                      name={
-                        r === UserRole.STUDENT ? 'account-school' : 
-                        r === UserRole.WORKER ? 'account-wrench' : 
-                        'briefcase-account'
-                      } 
-                      size={20} 
-                      color={role === r ? '#FFF' : '#94A3B8'} 
-                    />
-                    <Text style={[styles.roleButtonText, role === r && styles.roleButtonTextActive]}>
-                      {r.charAt(0).toUpperCase() + r.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
+            {renderStepContent()}
 
-            <View style={styles.inputGroup}>
-              <TextField
-                label="Email"
-                placeholder="Enter your email"
-                value={email}
-                onChangeText={setEmail}
-                error={errors.email}
-                keyboardType="email-address"
-                leftIcon={<Ionicons name="mail-outline" size={20} color="#94A3B8" />}
-                style={styles.inputStyle}
-              />
-
-              <TextField
-                label="Password"
-                placeholder="Enter your password"
-                value={password}
-                onChangeText={setPassword}
-                error={errors.password}
-                secureTextEntry={!showPassword}
-                leftIcon={<Ionicons name="lock-closed-outline" size={20} color="#94A3B8" />}
-                style={styles.inputStyle}
-                rightIcon={
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                    <MaterialCommunityIcons
-                      name={showPassword ? 'eye' : 'eye-off'}
-                      size={20}
-                      color="#94A3B8"
-                    />
-                  </TouchableOpacity>
-                }
+            <View style={styles.buttonRow}>
+              {currentStep > 0 && (
+                <Button 
+                  title="Back" 
+                  onPress={handleBack} 
+                  variant="outline" 
+                  style={styles.backBtn}
+                />
+              )}
+              <Button 
+                title={currentStep === 1 ? 'Sign In' : 'Continue'} 
+                loading={isLoading} 
+                onPress={handleNext} 
+                style={currentStep === 0 ? { flex: 1 } : styles.nextBtn} 
+                variant="primary" 
               />
             </View>
-
-            <TouchableOpacity
-              style={styles.forgotBtn}
-              onPress={() => router.push('/auth/forgot-password')}
-            >
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            <Button
-              title="Sign In"
-              onPress={handleLogin}
-              loading={isLoading}
-              fullWidth
-              style={styles.loginButton}
-              variant="primary"
-            />
           </Animated.View>
 
           {/* FOOTER */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>New to Worknest?</Text>
-            <TouchableOpacity onPress={() => router.push('/auth/register')}>
-              <Text style={styles.registerText}> Join Now</Text>
-            </TouchableOpacity>
-          </View>
+          {currentStep === 0 && (
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>New to Worknest?</Text>
+              <TouchableOpacity onPress={() => router.push('/auth/register')}>
+                <Text style={styles.registerText}> Join Now</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -237,147 +294,48 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flex: 1 },
+  orb: { position: 'absolute', borderRadius: 999, opacity: 0.15 },
+  orb1: { width: 300, height: 300, backgroundColor: '#6366F1', top: -50, right: -100 },
+  orb2: { width: 250, height: 250, backgroundColor: '#A855F7', bottom: 50, left: -100 },
+  orb3: { width: 200, height: 200, backgroundColor: '#F59E0B', top: height / 2, right: -50 },
+  scrollContainer: { flexGrow: 1, padding: 24, justifyContent: 'center' },
+  lottieContainer: { alignItems: 'center', marginBottom: 10 },
+  lottie: { width: 180, height: 180 },
+  title: { fontSize: 42, fontWeight: '900', color: '#FFFFFF', textAlign: 'center', letterSpacing: -1 },
+  subtitle: { fontSize: 16, color: '#94A3B8', marginTop: 4, marginBottom: 20, textAlign: 'center', fontWeight: '400' },
+  progressContainer: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 20 },
+  progressDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.1)' },
+  progressDotActive: { backgroundColor: '#4F46E5' },
+  progressDotCurrent: { width: 30 },
+  card: { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: 32, padding: 24, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)', elevation: 4 },
+  roleWrapper: { marginBottom: 10 },
+  roleVerticalGroup: { gap: 12 },
+  roleCard: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(255,255,255,0.03)', 
+    padding: 16, 
+    borderRadius: 20, 
+    borderWidth: 1, 
+    borderColor: 'rgba(255,255,255,0.05)',
+    gap: 16
   },
-  orb: {
-    position: 'absolute',
-    borderRadius: 999,
-    opacity: 0.15,
-  },
-  orb1: {
-    width: 300,
-    height: 300,
-    backgroundColor: '#6366F1',
-    top: -50,
-    right: -100,
-  },
-  orb2: {
-    width: 250,
-    height: 250,
-    backgroundColor: '#A855F7',
-    bottom: 50,
-    left: -100,
-  },
-  orb3: {
-    width: 200,
-    height: 200,
-    backgroundColor: '#F59E0B',
-    top: height / 2,
-    right: -50,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  lottieContainer: {
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  lottie: {
-    width: 180,
-    height: 180,
-  },
-  title: {
-    fontSize: 42,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    letterSpacing: -1,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#94A3B8',
-    marginTop: 4,
-    marginBottom: 40,
-    textAlign: 'center',
-    fontWeight: '400',
-  },
-  card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 32,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    elevation: 4,
-  },
-  roleWrapper: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#94A3B8',
-    marginBottom: 12,
-  },
-  roleButtonGroup: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: 16,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  roleButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 8,
-  },
-  roleButtonActive: {
-    backgroundColor: '#4F46E5',
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  roleButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#94A3B8',
-  },
-  roleButtonTextActive: {
-    color: '#FFFFFF',
-  },
-  inputGroup: {
-    gap: 0,
-  },
-  inputStyle: {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    color: '#FFF',
-  },
-  forgotBtn: {
-    alignItems: 'flex-end',
-    marginBottom: 24,
-  },
-  forgotText: {
-    color: '#6366F1',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  loginButton: {
-    borderRadius: 16,
-    height: 56,
-  },
-  footer: {
-    marginTop: 32,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  footerText: {
-    color: '#94A3B8',
-    fontSize: 15,
-  },
-  registerText: {
-    color: '#6366F1',
-    fontWeight: '700',
-    fontSize: 15,
-  },
+  roleCardActive: { backgroundColor: '#4F46E5', borderColor: '#6366F1' },
+  roleIconBox: { width: 48, height: 48, borderRadius: 12, backgroundColor: 'rgba(99,102,241,0.1)', alignItems: 'center', justifyContent: 'center' },
+  roleIconBoxActive: { backgroundColor: 'rgba(255,255,255,0.2)' },
+  roleTextContainer: { flex: 1 },
+  roleCardTitle: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  roleCardTitleActive: { color: '#FFF' },
+  inputLabel: { fontSize: 14, fontWeight: '600', color: '#94A3B8', marginBottom: 16, textAlign: 'center' },
+  inputGroup: { gap: 0 },
+  inputStyle: { backgroundColor: 'rgba(255, 255, 255, 0.03)', borderColor: 'rgba(255, 255, 255, 0.1)', color: '#FFF' },
+  forgotBtn: { alignItems: 'flex-end', marginBottom: 24 },
+  forgotText: { color: '#6366F1', fontWeight: '600', fontSize: 14 },
+  buttonRow: { flexDirection: 'row', gap: 12, marginTop: 10 },
+  backBtn: { flex: 0.4, borderRadius: 16, height: 56 },
+  nextBtn: { flex: 1, borderRadius: 16, height: 56 },
+  footer: { marginTop: 32, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  footerText: { color: '#94A3B8', fontSize: 15 },
+  registerText: { color: '#6366F1', fontWeight: '700', fontSize: 15 },
 });

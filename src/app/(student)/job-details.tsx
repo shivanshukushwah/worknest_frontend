@@ -136,7 +136,7 @@ export default function JobDetailsScreen() {
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>Duration</Text>
-              <Text style={styles.statValue}>{job.duration} hrs</Text>
+              <Text style={styles.statValue}>{job.duration}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>

@@ -150,11 +150,12 @@ export default function JobsScreen() {
               <Text style={styles.deadline}>
                 Deadline: {formatDate(item.deadline)}
               </Text>
-              {(item.type || item.jobType) && (
-                <View style={{ marginTop: 4 }}>
+              <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+                <Badge label={item.duration || 'Short-term'} color="warning" />
+                {(item.type || item.jobType) && (
                   <Badge label={(item.type || item.jobType || '').toUpperCase()} color="primary" />
-                </View>
-              )}
+                )}
+              </View>
             </View>
             
             {item.applicationStatus ? (

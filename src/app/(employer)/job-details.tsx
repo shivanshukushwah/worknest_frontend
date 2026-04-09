@@ -160,7 +160,7 @@ export default function JobDetailsScreen() {
               <View style={styles.infoBox}>
                 <Ionicons name="time-outline" size={20} color={Colors.primary} />
                 <Text style={styles.infoLabel}>Duration</Text>
-                <Text style={styles.infoValue}>{job.duration} hrs</Text>
+                <Text style={styles.infoValue}>{job.duration}</Text>
               </View>
               <View style={styles.infoBox}>
                 <Ionicons name="calendar-outline" size={20} color={Colors.primary} />

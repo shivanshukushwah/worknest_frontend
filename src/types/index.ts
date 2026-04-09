@@ -136,7 +136,7 @@ export interface Job {
   salaryType: 'fixed' | 'hourly' | 'range';
   positionsRequired: number;
   duration?: number; // Duration in hours/days
-  location?: string | { city?: string; state?: string; country?: string };
+  location?: string | { address?: string; city?: string; state?: string; country?: string };
   skills: string[];
   deadline: string;
   status: JobStatus;

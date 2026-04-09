@@ -30,6 +30,7 @@ export default function PostJobScreen() {
     applicationDeadlineHours: '',
     category: '',
     location: {
+      address: '',
       city: '',
       state: '',
     },
@@ -77,8 +78,13 @@ export default function PostJobScreen() {
       newErrors.applicationDeadlineHours = 'Must be at least 1 hour';
     }
 
-    if (formData.jobType === JobType.OFFLINE && !formData.location.city.trim()) {
-      newErrors['location.city'] = 'City is required for offline jobs';
+    if (formData.jobType === JobType.OFFLINE) {
+      if (!formData.location.address.trim()) {
+        newErrors['location.address'] = 'Street address is required';
+      }
+      if (!formData.location.city.trim()) {
+        newErrors['location.city'] = 'City is required';
+      }
     }
 
     if (!formData.location.state.trim()) {
@@ -136,6 +142,7 @@ export default function PostJobScreen() {
         category: formData.category.trim(),
         applicationDeadlineHours: Number(formData.applicationDeadlineHours),
         location: {
+          address: formData.location.address.trim(),
           city: formData.location.city.trim(),
           state: formData.location.state.trim(),
         },
@@ -264,26 +271,35 @@ export default function PostJobScreen() {
             </View>
 
             {formData.jobType === JobType.OFFLINE && (
-              <View style={styles.row}>
-                <View style={styles.flex1}>
-                  <TextField
-                    label="City"
-                    placeholder="Enter city"
-                    value={formData.location.city}
-                    onChangeText={(text) => setFormData((prev) => ({ ...prev, location: { ...prev.location, city: text } }))}
-                    error={errors['location.city']}
-                  />
+              <>
+                <TextField
+                  label="Street / Full Address"
+                  placeholder="e.g., Park Street, Building 12B"
+                  value={formData.location.address}
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, location: { ...prev.location, address: text } }))}
+                  error={errors['location.address']}
+                />
+                <View style={styles.row}>
+                  <View style={styles.flex1}>
+                    <TextField
+                      label="City"
+                      placeholder="Enter city"
+                      value={formData.location.city}
+                      onChangeText={(text) => setFormData((prev) => ({ ...prev, location: { ...prev.location, city: text } }))}
+                      error={errors['location.city']}
+                    />
+                  </View>
+                  <View style={styles.flex1}>
+                    <TextField
+                      label="State"
+                      placeholder="Enter state"
+                      value={formData.location.state}
+                      onChangeText={(text) => setFormData((prev) => ({ ...prev, location: { ...prev.location, state: text } }))}
+                      error={errors['location.state']}
+                    />
+                  </View>
                 </View>
-                <View style={styles.flex1}>
-                  <TextField
-                    label="State"
-                    placeholder="Enter state"
-                    value={formData.location.state}
-                    onChangeText={(text) => setFormData((prev) => ({ ...prev, location: { ...prev.location, state: text } }))}
-                    error={errors['location.state']}
-                  />
-                </View>
-              </View>
+              </>
             )}
 
             {formData.jobType === JobType.ONLINE && (
