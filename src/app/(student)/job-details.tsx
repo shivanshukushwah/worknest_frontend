@@ -12,7 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Card, Button, Badge } from '@components/index';
 import { jobAPI } from '@api/index';
 import { Job, JobType, ApplicationStatus } from '@mytypes/index';
-import { formatSalary, formatDate, isExpired } from '@utils/formatting';
+import { formatSalary, formatDate, isExpired, formatLocation } from '@utils/formatting';
 import { Colors, Shadows } from '@utils/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -160,7 +160,7 @@ export default function JobDetailsScreen() {
               <View style={styles.infoRow}>
                 <Ionicons name="location-outline" size={18} color={Colors.primary} />
                 <Text style={styles.infoLabel}>Location:</Text>
-                <Text style={styles.infoValue}>{job.location}</Text>
+                <Text style={styles.infoValue}>{formatLocation(job.location)}</Text>
               </View>
             )}
           </Card>

@@ -50,3 +50,15 @@ export const formatCurrency = (amount: number): string => {
 export const formatNumber = (num: number): string => {
   return new Intl.NumberFormat('en-IN').format(num);
 };
+
+export const formatLocation = (location: any): string => {
+  if (!location) return 'Not specified';
+  if (typeof location === 'string') return location;
+  
+  const parts = [];
+  if (location.city) parts.push(location.city);
+  if (location.state) parts.push(location.state);
+  if (location.country && location.country !== 'India') parts.push(location.country);
+  
+  return parts.length > 0 ? parts.join(', ') : 'Not specified';
+};

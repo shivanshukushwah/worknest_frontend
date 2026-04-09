@@ -12,7 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Card, Badge, Button } from '@components/index';
 import { jobAPI } from '@api/index';
 import { Job, JobType, JobStatus } from '@mytypes/index';
-import { formatSalary, formatDate, isExpired } from '@utils/formatting';
+import { formatSalary, formatDate, isExpired, formatLocation } from '@utils/formatting';
 import { Colors, Shadows } from '@utils/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
