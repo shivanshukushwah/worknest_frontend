@@ -33,6 +33,7 @@ export default function PostJobScreen() {
       city: '',
       state: '',
     },
+    positionsRequired: '1',
   });
 
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
@@ -138,6 +139,7 @@ export default function PostJobScreen() {
           city: formData.location.city.trim(),
           state: formData.location.state.trim(),
         },
+        positionsRequired: Number(formData.positionsRequired) || 1,
       };
 
       const response = await jobAPI.createJob(jobData as any);
@@ -321,6 +323,15 @@ export default function PostJobScreen() {
               value={formData.applicationDeadlineHours}
               onChangeText={(text) => handleFieldChange('applicationDeadlineHours', text)}
               error={errors.applicationDeadlineHours}
+              keyboardType="number-pad"
+            />
+
+            <TextField
+              label="Positions Required"
+              placeholder="e.g., 1, 5"
+              value={formData.positionsRequired}
+              onChangeText={(text) => handleFieldChange('positionsRequired', text)}
+              error={errors.positionsRequired}
               keyboardType="number-pad"
             />
           </Card>

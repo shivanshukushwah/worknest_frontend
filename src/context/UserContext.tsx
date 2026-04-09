@@ -98,6 +98,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
+        // Robust Location Safeguard: Ensure city/state/country are at the root level
+        if (profile.location && typeof profile.location === 'object') {
+          if (!profile.city) profile.city = profile.location.city;
+          if (!profile.state) profile.state = profile.location.state;
+          if (!profile.country) profile.country = profile.location.country;
+        }
+
         console.log('📦 Final Profile to set:', profile);
         setStudentProfile(profile);
       } else {

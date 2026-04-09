@@ -168,14 +168,18 @@ export default function RegisterScreen() {
             <View style={styles.roleWrapper}>
               <Text style={styles.inputLabel}>I am a</Text>
               <View style={styles.roleButtonGroup}>
-                {[UserRole.STUDENT, UserRole.EMPLOYER].map((r) => (
+                {[UserRole.STUDENT, UserRole.WORKER, UserRole.EMPLOYER].map((r) => (
                   <TouchableOpacity
                     key={r}
                     onPress={() => handleFieldChange('role', r)}
                     style={[styles.roleButton, formData.role === r && styles.roleButtonActive]}
                   >
                     <MaterialCommunityIcons 
-                      name={r === UserRole.STUDENT ? 'account-school' : 'briefcase-account'} 
+                      name={
+                        r === UserRole.STUDENT ? 'account-school' : 
+                        r === UserRole.WORKER ? 'account-wrench' : 
+                        'briefcase-account'
+                      } 
                       size={20} 
                       color={formData.role === r ? '#FFF' : '#94A3B8'} 
                     />
@@ -226,6 +230,18 @@ export default function RegisterScreen() {
                   </View>
                   <TextField label="Skills" placeholder="e.g. Design, Coding" value={formData.skills} onChangeText={(t) => handleFieldChange('skills', t)} style={styles.inputStyle} error={errors.skills} />
                   <TextField label="Education" value={formData.education} onChangeText={(t) => handleFieldChange('education', t)} style={styles.inputStyle} error={errors.education} />
+                </View>
+              )}
+
+              {formData.role === UserRole.WORKER && (
+                <View style={styles.roleFields}>
+                  <TextField label="Age" value={formData.age} onChangeText={(t) => handleFieldChange('age', t)} keyboardType="number-pad" style={styles.inputStyle} error={errors.age} />
+                  <View style={styles.row}>
+                    <TextField label="City" value={formData.city} onChangeText={(t) => handleFieldChange('city', t)} style={[styles.inputStyle, { flex: 1, marginRight: 8 }]} error={errors.city} />
+                    <TextField label="State" value={formData.state} onChangeText={(t) => handleFieldChange('state', t)} style={[styles.inputStyle, { flex: 1 }]} error={errors.state} />
+                  </View>
+                  <TextField label="Skills" placeholder="e.g. Cleaning, Delivery" value={formData.skills} onChangeText={(t) => handleFieldChange('skills', t)} style={styles.inputStyle} error={errors.skills} />
+                  <TextField label="Experience (Years)" value={formData.experience} onChangeText={(t) => handleFieldChange('experience', t)} keyboardType="number-pad" style={styles.inputStyle} error={errors.experience} />
                 </View>
               )}
 

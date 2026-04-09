@@ -22,8 +22,9 @@ interface TextFieldProps {
   multiline?: boolean;
   numberOfLines?: number;
   disabled?: boolean;
-  style?: ViewStyle;
+  style?: any; // Changed from ViewStyle to any to allow array styles
   inputStyle?: TextStyle;
+  leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
 
@@ -40,12 +41,14 @@ const TextField: React.FC<TextFieldProps> = ({
   disabled = false,
   style,
   inputStyle,
+  leftIcon,
   rightIcon,
 }) => {
   return (
     <View style={[styles.container, style]}>
       {label && <Text style={styles.label}>{label}</Text>}
       <View style={[styles.inputContainer, error && styles.inputError, disabled && styles.inputDisabled]}>
+        {leftIcon && <View style={styles.leftIconContainer}>{leftIcon}</View>}
         <TextInput
           style={[
             styles.input,
@@ -109,6 +112,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     textAlignVertical: 'top',
     minHeight: 100,
+  },
+  leftIconContainer: {
+    paddingRight: 8,
   },
   icon: {
     paddingLeft: 8,

@@ -147,7 +147,7 @@ export default function LoginScreen() {
             <View style={styles.roleWrapper}>
               <Text style={styles.inputLabel}>Login as</Text>
               <View style={styles.roleButtonGroup}>
-                {[UserRole.STUDENT, UserRole.EMPLOYER].map((r) => (
+                {[UserRole.STUDENT, UserRole.WORKER, UserRole.EMPLOYER].map((r) => (
                   <TouchableOpacity
                     key={r}
                     onPress={() => setRole(r)}
@@ -157,7 +157,11 @@ export default function LoginScreen() {
                     ]}
                   >
                     <MaterialCommunityIcons 
-                      name={r === UserRole.STUDENT ? 'account-school' : 'briefcase-account'} 
+                      name={
+                        r === UserRole.STUDENT ? 'account-school' : 
+                        r === UserRole.WORKER ? 'account-wrench' : 
+                        'briefcase-account'
+                      } 
                       size={20} 
                       color={role === r ? '#FFF' : '#94A3B8'} 
                     />
@@ -296,7 +300,6 @@ const styles = StyleSheet.create({
     padding: 24,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(20px)', // For web, won't affect native but looks clean
     elevation: 4,
   },
   roleWrapper: {

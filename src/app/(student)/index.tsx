@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
-import { Screen, Card, Badge } from '@components/index';
+import { Screen, Card, Badge, Button } from '@components/index';
 import { jobAPI, userAPI } from '@api/index';
 import { JobWithApplicationStatus, ApplicationStatus, StudentProfile } from '@mytypes/index';
 import { formatSalary, formatDate, formatCurrency } from '@utils/formatting';
-import { Colors, Typography, Shadows } from '@utils/theme';
+import { Colors, Shadows } from '@utils/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -147,11 +146,33 @@ export default function JobsScreen() {
           </Text>
 
           <View style={styles.jobFooter}>
-            <Text style={styles.deadline}>
-              Deadline: {formatDate(item.deadline)}
-            </Text>
-            {(item.type || item.jobType) && (
-              <Badge label={(item.type || item.jobType || '').toUpperCase()} color="primary" />
+            <View>
+              <Text style={styles.deadline}>
+                Deadline: {formatDate(item.deadline)}
+              </Text>
+              {(item.type || item.jobType) && (
+                <View style={{ marginTop: 4 }}>
+                  <Badge label={(item.type || item.jobType || '').toUpperCase()} color="primary" />
+                </View>
+              )}
+            </View>
+            
+            {item.applicationStatus ? (
+              <Badge 
+                label={item.applicationStatus.toUpperCase()} 
+                color={getApplicationStatusColor(item.applicationStatus)} 
+              />
+            ) : (
+              <Button
+                title="Apply"
+                size="small"
+                onPress={() =>
+                  router.push({
+                    pathname: '/(student)/job-details',
+                    params: { jobId: item.id || (item as any)._id },
+                  })
+                }
+              />
             )}
           </View>
         </View>
@@ -200,6 +221,14 @@ export default function JobsScreen() {
                 <View>
                   <Text style={styles.welcomeText}>Hello,</Text>
                   <Text style={styles.personHeaderName}>{profile?.name || 'Student'}</Text>
+                  {profile?.city ? (
+                    <View style={styles.locationHeaderContainer}>
+                      <Ionicons name="location" size={12} color="rgba(255,255,255,0.7)" />
+                      <Text style={styles.locationHeaderText}>{profile.city}, {profile.state}</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.locationHeaderPlaceholder}>Location Not Set</Text>
+                  )}
                 </View>
                 <View style={styles.headerBadges}>
                   <View style={styles.skillBadge}>
@@ -287,6 +316,23 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 22,
     fontWeight: '800' as any,
+  },
+  locationHeaderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 4,
+  },
+  locationHeaderText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+    fontWeight: '500' as any,
+  },
+  locationHeaderPlaceholder: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 11,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   headerBadges: {
     flexDirection: 'row',

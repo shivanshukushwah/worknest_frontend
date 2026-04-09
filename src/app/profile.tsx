@@ -325,7 +325,13 @@ const StudentData = ({ profile }: { profile: any }) => (
       {profile.age && <InfoRow label="Age" value={`${profile.age} Years`} icon="calendar" />}
       <InfoRow 
         label="Location" 
-        value={profile.city ? `${profile.city}, ${profile.state}` : 'Not Set'} 
+        value={
+          (profile.city) 
+            ? `${profile.city}, ${profile.state}` 
+            : (profile.location?.city) 
+              ? `${profile.location.city}, ${profile.location.state}` 
+              : 'Not Set'
+        } 
         icon="location" 
       />
       {profile.bio && <View style={styles.divider} />}
