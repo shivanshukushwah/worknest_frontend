@@ -12,7 +12,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Screen, Card, Badge, Button } from '@components/index';
 import { jobAPI, userAPI } from '@api/index';
 import { JobWithApplicationStatus, ApplicationStatus, StudentProfile } from '@mytypes/index';
-import { formatSalary, formatDate, formatCurrency } from '@utils/formatting';
+import { formatSalary, formatDate, formatCurrency, formatDeadline } from '@utils/formatting';
 import { Colors, Shadows } from '@utils/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -148,7 +148,7 @@ export default function JobsScreen() {
           <View style={styles.jobFooter}>
             <View>
               <Text style={styles.deadline}>
-                Deadline: {formatDate(item.deadline)}
+                Deadline: {formatDeadline(item.deadline)}
               </Text>
               <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
                 <Badge label={item.duration || 'Short-term'} color="warning" />

@@ -29,6 +29,25 @@ export const isExpired = (date: string | Date): boolean => {
   return dayjs(date).isBefore(dayjs());
 };
 
+export const formatDeadline = (date: string | Date): string => {
+  if (!date) return 'Flexible';
+  const d = dayjs(date);
+  const now = dayjs();
+  
+  if (d.isBefore(now)) return 'Expired';
+  
+  const diffHours = d.diff(now, 'hour');
+  const diffMinutes = d.diff(now, 'minute');
+  
+  if (diffHours < 1) {
+    return `${diffMinutes} mins left`;
+  } else if (diffHours < 24) {
+    return `${diffHours} hours left`;
+  }
+  
+  return d.format('DD MMM YYYY');
+};
+
 export const getDaysRemaining = (date: string | Date): number => {
   return dayjs(date).diff(dayjs(), 'day');
 };
